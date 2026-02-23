@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>browser</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       min-height: 100vh;
@@ -14,6 +17,54 @@
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #fff;
       text-align: center;
+    }
+    .container {
+      position: relative;
+    }
+    .menu-btn {
+      position: absolute;
+      top: -1rem;
+      right: -1rem;
+      background: none;
+      border: none;
+      color: #fff;
+      opacity: 0.4;
+      cursor: pointer;
+      font-size: 1.5rem;
+      line-height: 1;
+      padding: 0.25rem;
+    }
+    .menu-btn:hover {
+      opacity: 0.7;
+    }
+    .menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0.5rem 0;
+      min-width: 280px;
+      text-align: left;
+      font-size: 0.75rem;
+      z-index: 10;
+    }
+    .menu.open {
+      display: block;
+    }
+    .menu-title {
+      padding: 0.5rem 1rem;
+      opacity: 0.5;
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .menu-item {
+      padding: 0.5rem 1rem;
+      opacity: 0.7;
+      line-height: 1.4;
     }
     h1 {
       font-size: 2rem;
@@ -45,6 +96,15 @@
   </style>
 </head>
 <body>
+  <div class="container">
+    <button class="menu-btn" onclick="document.querySelector('.menu').classList.toggle('open')">...</button>
+    <div class="menu">
+      <div class="menu-title">Info</div>
+      <div class="menu-item">
+        Browser may quit unexpectedly if .env is not configured with Firebase variables. Set FLUTTER_FIREBASE_JSON or ANDROID_GMS_SERVICES_JSON in your environment before running.
+      </div>
+    </div>
+  </div>
   <h1>browser</h1>
   <p>desktop web browser for macOS</p>
   <a href="https://github.com/bniladridas/browser/releases/latest/download/browser.dmg">download</a>
