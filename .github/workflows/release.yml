@@ -28,7 +28,7 @@ jobs:
 
       - uses: ./.github/actions/setup-flutter
         with:
-          flutter-version: '3.38.3'
+          flutter-version: '3.41.2'
 
       - run: flutter pub get
       - name: Create .env file
