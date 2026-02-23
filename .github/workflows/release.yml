@@ -19,6 +19,7 @@ permissions:
 jobs:
   build-and-release:
     runs-on: macos-latest
+    if: github.repository_owner == 'bniladridas'
     env:
       MACOS_CODE_SIGN_IDENTITY: ${{ secrets.MACOS_CODE_SIGN_IDENTITY }}
 

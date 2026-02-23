@@ -16,6 +16,7 @@ on:
 jobs:
   test:
     runs-on: macos-latest
+    if: github.repository_owner == 'bniladridas'
 
     steps:
       - uses: actions/checkout@v4
