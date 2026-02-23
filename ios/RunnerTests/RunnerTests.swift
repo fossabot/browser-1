@@ -6,15 +6,13 @@ import XCTest
 class RunnerTests: XCTestCase {
 
   func testAppDelegateWindowExists() {
-    let appDelegate = UIApplication.shared.delegate as? AppDelegate
-    XCTAssertNotNil(appDelegate, "App delegate should exist")
-    XCTAssertNotNil(appDelegate?.window, "App delegate should have a window")
+    let appDelegate = try XCTUnwrap(UIApplication.shared.delegate as? AppDelegate, "App delegate should exist")
+    let _ = try XCTUnwrap(appDelegate.window, "App delegate should have a window")
   }
 
   func testAppDelegateWindowHasRootViewController() {
-    let appDelegate = UIApplication.shared.delegate as? AppDelegate
-    XCTAssertNotNil(appDelegate, "App delegate should exist")
-    XCTAssertNotNil(appDelegate?.window?.rootViewController, "Window should have a root view controller")
+    let appDelegate = try XCTUnwrap(UIApplication.shared.delegate as? AppDelegate, "App delegate should exist")
+    let _ = try XCTUnwrap(appDelegate.window?.rootViewController, "Window should have a root view controller")
   }
 
 }
