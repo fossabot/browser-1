@@ -10,7 +10,7 @@ version: 2.1
 jobs:
   daily_maintenance:
     docker:
-      - image: ghcr.io/cirruslabs/flutter:stable
+      - image: ghcr.io/cirruslabs/flutter:3.41.2
     steps:
       - checkout
       - run:

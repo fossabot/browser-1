@@ -7,7 +7,7 @@
 
 language: minimal
 os: osx
-osx_image: xcode16.0
+osx_image: xcode14.2
 
 branches:
   only:
@@ -21,7 +21,10 @@ cache:
     - ios/Pods
 
 before_install:
-  - git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$HOME/flutter"
+  - |
+    if [ ! -d "$HOME/flutter/.git" ]; then
+      git clone --depth 1 -b v3.41.2 https://github.com/flutter/flutter.git "$HOME/flutter"
+    fi
   - export PATH="$HOME/flutter/bin:$PATH"
   - flutter --version
 
@@ -44,6 +47,11 @@ script:
       -destination 'generic/platform=iOS Simulator' \
       -configuration Debug build-for-testing CODE_SIGNING_ALLOWED=NO
   - |
+    SIMULATOR_ID="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ {print $2; exit}')"
+    if [ -z "$SIMULATOR_ID" ]; then
+      echo "No available iPhone simulator found." >&2
+      exit 1
+    fi
     cd ios && xcodebuild test-without-building -workspace Runner.xcworkspace \
-      -scheme Runner -destination 'generic/platform=iOS Simulator' \
+      -scheme Runner -destination "id=$SIMULATOR_ID" \
       CODE_SIGNING_ALLOWED=NO

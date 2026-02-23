@@ -1307,7 +1307,7 @@ class _BrowserPageState extends State<BrowserPage>
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Use Torry to stay one hop removed from the clearnet while still enjoying curated directories and anonymous views.',
+                  'Use Torry knowing your browser connects to torry.io over HTTPS while Torry offers Tor-routed searches and anonymous directory views.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -1340,7 +1340,7 @@ class _BrowserPageState extends State<BrowserPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Need more context? Torry explains how it tunnels searches and keeps you private on every page.',
+                  'Need more context? Torry can help protect privacy in the browser, but it does not remove server-side tracking or guarantee anonymity.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
