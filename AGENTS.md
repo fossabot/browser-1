@@ -89,3 +89,26 @@ When creating GitHub Actions workflows:
 - Add a new line at the end of the file.
 
 This ensures safe and valid workflow files.
+
+## Firebase Setup
+
+This project uses Firebase with environment variables. For local development:
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Update `.env` with valid Firebase credentials from your Firebase project.
+
+3. For macOS, create a dummy `GoogleService-Info.plist`:
+   - Run `flutterfire configure --platforms=macos` to generate real config
+   - Or create a dummy file at `macos/Runner/GoogleService-Info.plist`
+
+**Warning**: If `.env` is not provided with correct Firebase variables, the macOS app will crash with:
+```
+Exception Type: EXC_CRASH (SIGABRT)
+Application Specific Information: abort() called
+```
+
+This is because Firebase tries to initialize with invalid configuration.
