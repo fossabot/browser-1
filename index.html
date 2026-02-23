@@ -5,108 +5,311 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>browser</title>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap");
+    :root {
+      --bg: #0e0c0a;
+      --ink: #f4efe8;
+      --muted: #c8beb1;
+      --accent: #ffb347;
+      --accent-2: #6ad7ff;
+      --panel: rgba(20, 16, 12, 0.72);
+      --line: rgba(244, 239, 232, 0.12);
+      --glow: rgba(255, 179, 71, 0.35);
+      --shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    }
     * {
       box-sizing: border-box;
     }
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-content: center;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      color: #fff;
-      text-align: center;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(106, 215, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 80% 10%, rgba(255, 179, 71, 0.25), transparent 50%),
+        linear-gradient(150deg, #0b0a09 0%, #14100c 45%, #1c1610 100%);
+      overflow-x: hidden;
     }
-    .container {
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 5px);
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      z-index: 0;
+    }
+    main {
       position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 3rem;
+      align-content: center;
+      min-height: 100vh;
+      padding: 4.5rem clamp(1.5rem, 4vw, 4.5rem);
+    }
+    .hero {
+      display: grid;
+      gap: 2rem;
+      align-items: center;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    }
+    .hero-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: clamp(2rem, 4vw, 3.25rem);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-family: "Space Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(255, 179, 71, 0.08);
+      border: 1px solid rgba(255, 179, 71, 0.3);
+    }
+    h1 {
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+      font-weight: 500;
+      margin: 1rem 0 0.75rem;
+      letter-spacing: -0.02em;
+      text-transform: lowercase;
+    }
+    .lead {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 0 0 2rem;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+      padding: 0.9rem 1.8rem;
+      border-radius: 999px;
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0b0a09;
+      background: linear-gradient(135deg, var(--accent), #ffd37a);
+      box-shadow: 0 10px 30px var(--glow);
+      border: none;
+      text-decoration: none;
+    }
+    .cta.secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .spec-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .spec {
+      padding: 1rem 1.2rem;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(10, 8, 6, 0.7);
+      display: grid;
+      gap: 0.35rem;
+    }
+    .spec span {
+      font-family: "Space Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--accent-2);
+      text-transform: uppercase;
+    }
+    .spec strong {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .menu-zone {
+      position: relative;
+      justify-self: end;
     }
     .menu-btn {
-      position: absolute;
-      top: -1rem;
-      right: -1rem;
-      background: none;
-      border: none;
-      color: #fff;
-      opacity: 0.4;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      border-radius: 999px;
       cursor: pointer;
-      font-size: 1.5rem;
-      line-height: 1;
-      padding: 0.25rem;
-    }
-    .menu-btn:hover {
-      opacity: 0.7;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.9rem;
+      font-family: "Space Mono", monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .menu {
       display: none;
       position: absolute;
-      top: 100%;
+      top: calc(100% + 0.75rem);
       right: 0;
-      background: rgba(0, 0, 0, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 0.5rem 0;
+      background: rgba(8, 6, 4, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 0.75rem 0;
       min-width: 280px;
       text-align: left;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       z-index: 10;
+      box-shadow: var(--shadow);
     }
     .menu.open {
       display: block;
     }
     .menu-title {
       padding: 0.5rem 1rem;
-      opacity: 0.5;
-      font-size: 0.625rem;
+      opacity: 0.6;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
     }
     .menu-item {
       padding: 0.5rem 1rem;
-      opacity: 0.7;
-      line-height: 1.4;
+      opacity: 0.8;
+      line-height: 1.5;
+      color: var(--muted);
     }
-    h1 {
-      font-size: 2rem;
-      font-weight: 200;
-      margin: 0;
+    .frame {
+      position: relative;
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+      box-shadow: var(--shadow);
+      padding: 1.4rem;
+      min-height: 320px;
+    }
+    .frame::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255, 179, 71, 0.25), transparent 55%),
+        radial-gradient(circle at 80% 70%, rgba(106, 215, 255, 0.2), transparent 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      opacity: 0.9;
+    }
+    .frame-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 1rem;
+      height: 100%;
+    }
+    .frame-title {
+      font-family: "Space Mono", monospace;
       letter-spacing: 0.1em;
-      text-transform: lowercase;
-    }
-    p {
-      margin: .25rem 0 1.5rem;
-      opacity: .5;
-      font-size: .875rem;
-      font-weight: 300;
-    }
-    a {
-      color: inherit;
-      text-decoration: none;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: .5rem 1.5rem;
-      border-radius: 100px;
-      font-size: .75rem;
-      letter-spacing: 0.05em;
       text-transform: uppercase;
-      transition: all .2s ease;
+      font-size: 0.75rem;
+      color: var(--muted);
     }
-    a:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .frame-visual {
+      display: grid;
+      gap: 1rem;
+    }
+    .pill {
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(10, 8, 6, 0.65);
+      font-size: 0.8rem;
+      color: var(--muted);
+      width: fit-content;
+    }
+    .chart {
+      height: 120px;
+      border-radius: 16px;
+      background: linear-gradient(90deg, rgba(255, 179, 71, 0.1), rgba(106, 215, 255, 0.12));
+      position: relative;
+      overflow: hidden;
+    }
+    .chart::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .menu-zone {
+        justify-self: start;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <button class="menu-btn" onclick="document.querySelector('.menu').classList.toggle('open')">...</button>
-    <div class="menu">
-      <div class="menu-title">Info</div>
-      <div class="menu-item">
-        Browser may quit unexpectedly if .env is not configured with Firebase variables. Set FLUTTER_FIREBASE_JSON or ANDROID_GMS_SERVICES_JSON in your environment before running.
+  <main>
+    <div class="menu-zone">
+      <button class="menu-btn" onclick="document.querySelector('.menu').classList.toggle('open')">info</button>
+      <div class="menu">
+        <div class="menu-title">Info</div>
+        <div class="menu-item">
+          Browser may quit unexpectedly if .env is not configured with Firebase variables. Set FLUTTER_FIREBASE_JSON or ANDROID_GMS_SERVICES_JSON in your environment before running.
+        </div>
       </div>
     </div>
-  </div>
-  <h1>browser</h1>
-  <p>desktop web browser for macOS</p>
-  <a href="https://github.com/bniladridas/browser/releases/latest/download/browser.dmg">download</a>
+    <section class="hero">
+      <div class="hero-card">
+        <span class="badge">macOS only</span>
+        <h1>browser</h1>
+        <p class="lead">A minimalist desktop web browser built for focus. Fast launch, crisp typography, and just the tools you need.</p>
+        <div class="cta-row">
+          <a class="cta" href="https://github.com/bniladridas/browser/releases/latest/download/browser.dmg">download</a>
+          <a class="cta secondary" href="https://github.com/bniladridas/browser">view source</a>
+        </div>
+      </div>
+      <div class="frame">
+        <div class="frame-content">
+          <div class="frame-title">Performance Snapshot</div>
+          <div class="frame-visual">
+            <div class="pill">Launch time under 2s</div>
+            <div class="pill">Battery friendly</div>
+            <div class="chart"></div>
+          </div>
+          <div class="spec-grid">
+            <div class="spec">
+              <span>Focus</span>
+              <strong>Distraction-free workspace</strong>
+            </div>
+            <div class="spec">
+              <span>Privacy</span>
+              <strong>Local-first settings</strong>
+            </div>
+            <div class="spec">
+              <span>Build</span>
+              <strong>SwiftUI + Flutter stack</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
