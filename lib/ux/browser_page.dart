@@ -307,6 +307,8 @@ class TabData {
   String currentUrl;
   final TextEditingController urlController;
   final FocusNode urlFocusNode;
+  final TextEditingController torrySearchController;
+  final FocusNode torrySearchFocusNode;
   WebViewController? webViewController;
   BrowserState state = const BrowserState.idle();
   final List<String> history = [];
@@ -316,7 +318,9 @@ class TabData {
 
   TabData(this.currentUrl, {String? displayUrl})
       : urlController = TextEditingController(text: displayUrl ?? currentUrl),
-        urlFocusNode = FocusNode();
+        urlFocusNode = FocusNode(),
+        torrySearchController = TextEditingController(),
+        torrySearchFocusNode = FocusNode();
 }
 
 Future<Map<String, dynamic>> _fetchGitHubRepo(String url) async {
@@ -520,9 +524,6 @@ class _BrowserPageState extends State<BrowserPage>
     'mkv',
   };
   final Set<String> _pendingHeaderChecks = {};
-
-  final TextEditingController _torrySearchController = TextEditingController();
-  final FocusNode _torrySearchFocusNode = FocusNode();
 
   String _displayUrl(String url) => url == defaultHomepageUrl ? '' : url;
 
@@ -758,6 +759,8 @@ class _BrowserPageState extends State<BrowserPage>
         tabs[index].isClosed = true;
         tabs[index].urlController.dispose();
         tabs[index].urlFocusNode.dispose();
+        tabs[index].torrySearchController.dispose();
+        tabs[index].torrySearchFocusNode.dispose();
         tabs.removeAt(index);
 
         // Clear cache and cookies for private browsing
@@ -786,10 +789,10 @@ class _BrowserPageState extends State<BrowserPage>
     for (final tab in tabs) {
       tab.urlController.dispose();
       tab.urlFocusNode.dispose();
+      tab.torrySearchController.dispose();
+      tab.torrySearchFocusNode.dispose();
     }
     tabController.dispose();
-    _torrySearchController.dispose();
-    _torrySearchFocusNode.dispose();
     _saveBookmarks();
     super.dispose();
   }
@@ -1184,9 +1187,9 @@ class _BrowserPageState extends State<BrowserPage>
   }
 
   void _performTorrySearch([String? text]) {
-    final query = (text ?? _torrySearchController.text).trim();
+    final query = (text ?? activeTab.torrySearchController.text).trim();
     if (query.isEmpty) {
-      _torrySearchFocusNode.requestFocus();
+      activeTab.torrySearchFocusNode.requestFocus();
       return;
     }
     final targetUrl =
@@ -1255,8 +1258,8 @@ class _BrowserPageState extends State<BrowserPage>
                     ),
                   ),
                   child: TextField(
-                    controller: _torrySearchController,
-                    focusNode: _torrySearchFocusNode,
+                    controller: tab.torrySearchController,
+                    focusNode: tab.torrySearchFocusNode,
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _performTorrySearch(),
                     decoration: InputDecoration(

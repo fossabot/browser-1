@@ -106,7 +106,7 @@ This project uses Firebase with environment variables. For local development:
    - Or create a dummy file at `macos/Runner/GoogleService-Info.plist`
 
 **Warning**: If `.env` is not provided with correct Firebase variables, the macOS app will crash with:
-```
+```text
 Exception Type: EXC_CRASH (SIGABRT)
 Application Specific Information: abort() called
 ```
