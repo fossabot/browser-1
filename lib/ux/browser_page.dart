@@ -1202,7 +1202,7 @@ class _BrowserPageState extends State<BrowserPage>
     final colorScheme = theme.colorScheme;
 
     const features = [
-      {'label': 'Tor-powered search', 'icon': Icons.lock},
+      {'label': 'Search via torry.io', 'icon': Icons.lock},
       {'label': 'Anonymous view links', 'icon': Icons.visibility_off},
       {'label': 'Onion directory', 'icon': Icons.cloud},
     ];
@@ -1244,6 +1244,15 @@ class _BrowserPageState extends State<BrowserPage>
                   'Torry routes queries over Tor, exposes an anonymous view layer, and highlights verified onion destinations.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Your browser connects to torry.io over HTTPS; Tor routing is performed by torry.io\'s backend.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    fontStyle: FontStyle.italic,
                   ),
                   textAlign: TextAlign.center,
                 ),
