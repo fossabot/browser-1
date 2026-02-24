@@ -24,6 +24,8 @@ jobs:
         with:
           flutter-version: '3.41.2'
       - run: flutter pub get
+      - name: Generate code
+        run: flutter pub run build_runner build --delete-conflicting-outputs
       - name: Create .env file
         run: |
           {

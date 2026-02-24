@@ -23,7 +23,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         exit 0
     else
         echo "$test_target failed. Check the output above for details."
-        if rg -q "Failed to foreground app; open returned 1" "$log_file"; then
+        log_contains_foreground_failure() {
+            if command -v rg >/dev/null 2>&1; then
+                rg -q "Failed to foreground app; open returned 1" "$1"
+            else
+                grep -q "Failed to foreground app; open returned 1" "$1"
+            fi
+        }
+        if log_contains_foreground_failure "$log_file"; then
             echo "Foreground failed. Attempting to clear quarantine and retry once..."
             app_path="build/macos/Build/Products/Debug/browser.app"
             if [[ -d "$app_path" ]]; then
@@ -37,7 +44,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
                 echo "$test_target passed!"
                 exit 0
             fi
-            if rg -q "Failed to foreground app; open returned 1" "$log_file"; then
+            if log_contains_foreground_failure "$log_file"; then
                 echo "E2E requires a foregrounded macOS GUI session. Run from a desktop session."
             fi
             rm -f "$log_file"
