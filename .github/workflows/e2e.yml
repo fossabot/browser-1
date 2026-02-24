@@ -67,4 +67,9 @@ jobs:
           /usr/bin/open -Ra "Finder" || true
           echo "Login session info:"
           /usr/bin/who | sed -n '1,20p'
+      - name: Clean pods cache
+        run: |
+          rm -rf macos/Pods
+          rm -rf macos/Podfile.lock
+          rm -rf build/macos
       - run: ./scripts/e2e.sh
