@@ -1707,6 +1707,11 @@ class _BrowserPageState extends State<BrowserPage>
     if (tab.state is BrowserError) {
       return _buildErrorView(tab);
     }
+    if (defaultTargetPlatform == TargetPlatform.macOS && isIntegrationTest) {
+      return const Center(
+        child: Text('WebView disabled in integration tests.'),
+      );
+    }
 
     if (tab.webViewController == null) {
       tab.webViewController = WebViewController();
