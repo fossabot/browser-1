@@ -209,14 +209,6 @@ void main() async {
     }
     try {
       await windowManager.ensureInitialized();
-      if (defaultTargetPlatform == TargetPlatform.macOS) {
-        await windowManager.waitUntilReadyToShow(
-          const WindowOptions(
-            titleBarStyle: TitleBarStyle.hidden,
-            windowButtonVisibility: true,
-          ),
-        );
-      }
     } catch (e) {
       logger.w(
           'Warning: Window manager initialization failed on this platform: $e. Some desktop window features (minimize, maximize, etc.) may not be available.');
@@ -231,6 +223,20 @@ void main() async {
           'Firebase initialization failed: $e. AI features will not be available.');
     }
     runApp(MyApp(aiAvailable: aiAvailable));
+    if (defaultTargetPlatform == TargetPlatform.macOS) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          await windowManager.waitUntilReadyToShow(
+            const WindowOptions(
+              titleBarStyle: TitleBarStyle.hidden,
+              windowButtonVisibility: true,
+            ),
+          );
+        } catch (e) {
+          logger.w('Window ready callback failed: $e');
+        }
+      });
+    }
   }, (error, stack) {
     logger.e('Uncaught error: $error', error: error, stackTrace: stack);
   });
