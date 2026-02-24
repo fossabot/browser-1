@@ -22,9 +22,11 @@ import 'package:pkg/ai_service.dart';
 import 'constants.dart';
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, required this.aiAvailable});
+  const MyApp(
+      {super.key, required this.aiAvailable, this.enableGitFetch = false});
 
   final bool aiAvailable;
+  final bool enableGitFetch;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -80,8 +82,7 @@ class _MyAppState extends State<MyApp> {
   void _setAdjustedThemeMode(ThemeMode mode, Color? seedColor) {
     if (themeMode != AppThemeMode.adjust) return;
     final resolvedSeed = seedColor ?? Colors.blue;
-    if (adjustedThemeMode == mode &&
-        adjustedSeedColor == resolvedSeed) {
+    if (adjustedThemeMode == mode && adjustedSeedColor == resolvedSeed) {
       return;
     }
     void applyUpdate() {
@@ -129,7 +130,7 @@ class _MyAppState extends State<MyApp> {
           initialUrl: homepage,
           hideAppBar: hideAppBar,
           useModernUserAgent: useModernUserAgent,
-          enableGitFetch: enableGitFetch,
+          enableGitFetch: widget.enableGitFetch || enableGitFetch,
           aiAvailable: widget.aiAvailable,
           privateBrowsing: privateBrowsing,
           adBlocking: adBlocking,
@@ -194,7 +195,6 @@ class _MyAppState extends State<MyApp> {
     }
     return Color.lerp(base, target, t) ?? base;
   }
-
 }
 
 void main() async {
