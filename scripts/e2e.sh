@@ -19,6 +19,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         grep -q "Failed to foreground app; open returned 1" "$1"
     }
     run_e2e() {
+        # Try to activate GUI session
+        /usr/bin/open -a Finder || true
+        sleep 1
         E2E_LOG_FILE="$(mktemp -t flutter-e2e.XXXXXX.log)"
         flutter test -d macos --dart-define=INTEGRATION_TEST=true $test_target "$@" 2>&1 | tee "$E2E_LOG_FILE"
         local status=${PIPESTATUS[0]}

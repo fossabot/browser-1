@@ -64,4 +64,5 @@ jobs:
           rm -rf macos/Pods
           rm -rf macos/Podfile.lock
           rm -rf build/macos
-      - run: ./scripts/e2e.sh
+      - name: Build macOS app
+        run: flutter build macos
