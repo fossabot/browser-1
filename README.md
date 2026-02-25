@@ -63,5 +63,5 @@ To unmark a specific file, add `-linguist-generated` in `.gitattributes`.
 Fork, branch, edit, commit, PR.
 
 ## License
-
-Proprietary - All Rights Reserved.
+This project is proprietary software. See [LICENSE](LICENSE) for full terms.
+Copyright (c) 2026 Niladri Das (bniladridas). All Rights Reserved.
