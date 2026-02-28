@@ -115,6 +115,24 @@ jobs:
             echo "status=unsigned" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Validate tag format
+        id: validate-tag
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          if ! [[ "$TAG" =~ ^desktop/app-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Tag format invalid. Expected: desktop/app-X.Y.Z"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag exists
+        run: |
+          TAG="${{ steps.validate-tag.outputs.tag }}"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Error: Tag '$TAG' does not exist in repository"
+            exit 1
+          fi
+
       - name: Upload release asset
         id: upload
         if: startsWith(github.ref, 'refs/tags/') || inputs.tag != ''
@@ -122,7 +140,7 @@ jobs:
         with:
           files: build/macos/Build/Products/Release/browser.dmg
           generate_release_notes: false
-          tag_name: ${{ github.event.inputs.tag || github.ref }}
+          tag_name: ${{ steps.validate-tag.outputs.tag }}
         continue-on-error: true
 
       - name: Verify upload
