@@ -1977,6 +1977,11 @@ class _BrowserPageState extends State<BrowserPage>
             quietLogger.w(
               'Ignoring benign web resource error: ${error.errorCode} ${error.description}',
             );
+            if (mounted && tab.state is Loading) {
+              setState(() {
+                tab.state = BrowserState.success(tab.currentUrl);
+              });
+            }
             return;
           }
           _handleLoadError(tab, error.description);
