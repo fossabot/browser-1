@@ -354,6 +354,12 @@ class GoBackIntent extends Intent {}
 
 class GoForwardIntent extends Intent {}
 
+class NewTabIntent extends Intent {}
+
+class CloseTabIntent extends Intent {}
+
+class NewWindowIntent extends Intent {}
+
 class TabData {
   String currentUrl;
   final TextEditingController urlController;
@@ -2433,6 +2439,18 @@ class _BrowserPageState extends State<BrowserPage>
                 control: defaultTargetPlatform != TargetPlatform.macOS,
                 meta: defaultTargetPlatform == TargetPlatform.macOS):
             RefreshIntent(),
+        SingleActivator(LogicalKeyboardKey.keyT,
+                control: defaultTargetPlatform != TargetPlatform.macOS,
+                meta: defaultTargetPlatform == TargetPlatform.macOS):
+            NewTabIntent(),
+        SingleActivator(LogicalKeyboardKey.keyW,
+                control: defaultTargetPlatform != TargetPlatform.macOS,
+                meta: defaultTargetPlatform == TargetPlatform.macOS):
+            CloseTabIntent(),
+        SingleActivator(LogicalKeyboardKey.keyN,
+                control: defaultTargetPlatform != TargetPlatform.macOS,
+                meta: defaultTargetPlatform == TargetPlatform.macOS):
+            NewWindowIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
             GoBackIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true):
@@ -2445,6 +2463,18 @@ class _BrowserPageState extends State<BrowserPage>
           ),
           RefreshIntent: CallbackAction<RefreshIntent>(
             onInvoke: (intent) => _refresh(),
+          ),
+          NewTabIntent: CallbackAction<NewTabIntent>(
+            onInvoke: (intent) => _addNewTab(),
+          ),
+          CloseTabIntent: CallbackAction<CloseTabIntent>(
+            onInvoke: (intent) => _closeTab(tabController.index),
+          ),
+          NewWindowIntent: CallbackAction<NewWindowIntent>(
+            onInvoke: (intent) {
+              // New window not supported in desktop app
+              return null;
+            },
           ),
           GoBackIntent: CallbackAction<GoBackIntent>(
             onInvoke: (intent) => _goBack(),
