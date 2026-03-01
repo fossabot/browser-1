@@ -38,4 +38,3 @@ class SavePasswordPromptData {
   final String username;
   final String password;
 }
-
