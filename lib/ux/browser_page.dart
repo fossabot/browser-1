@@ -2429,8 +2429,10 @@ class _BrowserPageState extends State<BrowserPage>
             ),
           );
 
-    return Shortcuts(
-      shortcuts: {
+    return Focus(
+      autofocus: true,
+      child: Shortcuts(
+        shortcuts: {
         SingleActivator(LogicalKeyboardKey.keyL,
                 control: defaultTargetPlatform != TargetPlatform.macOS,
                 meta: defaultTargetPlatform == TargetPlatform.macOS):
@@ -2680,6 +2682,7 @@ class _BrowserPageState extends State<BrowserPage>
           ),
         ),
       ),
+    ),
     );
   }
 }
