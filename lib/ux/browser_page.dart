@@ -24,14 +24,21 @@ import 'package:desktop_drop/desktop_drop.dart';
 import '../constants.dart';
 import '../features/theme_utils.dart';
 import '../features/bookmark_manager.dart';
+import '../features/password_prompt.dart';
+import '../features/password_storage.dart';
+import '../features/password_autofill.dart';
+import '../features/login_detection.dart';
 import '../browser_state.dart';
 
 import '../features/video_manager.dart';
 import '../logging/logger.dart';
 import '../logging/network_monitor.dart';
 import '../utils/string_utils.dart';
+import '../utils/platform_utils.dart';
 import 'package:pkg/ai_chat_widget.dart';
 import 'network_debug_dialog.dart';
+import 'save_password_prompt.dart';
+import 'password_vault_screen.dart';
 
 const _userAgents = {
   TargetPlatform.macOS: {
@@ -122,6 +129,7 @@ class SettingsDialog extends HookWidget {
     final originalPrivateBrowsing = useRef<bool?>(null);
     final adBlocking = useState(false);
     final strictMode = useState(false);
+    final passwordManagerEnabled = useState(false);
     final selectedTheme =
         useState<AppThemeMode>(currentTheme ?? AppThemeMode.system);
     final homepageController = useTextEditingController();
@@ -144,6 +152,8 @@ class SettingsDialog extends HookWidget {
         originalPrivateBrowsing.value = privateBrowsing.value;
         adBlocking.value = prefs.getBool(adBlockingKey) ?? false;
         strictMode.value = prefs.getBool(strictModeKey) ?? false;
+        passwordManagerEnabled.value =
+            prefs.getBool(passwordManagerEnabledKey) ?? false;
         if (prefs.getString(themeModeKey) != null) {
           selectedTheme.value = AppThemeMode.values.firstWhere(
               (m) => m.name == prefs.getString(themeModeKey),
@@ -219,6 +229,27 @@ class SettingsDialog extends HookWidget {
               value: strictMode.value,
               onChanged: (value) => strictMode.value = value,
             ),
+            SwitchListTile(
+              title: const Text('Password Manager'),
+              subtitle: const Text('Save passwords'),
+              value: passwordManagerEnabled.value,
+              onChanged: (value) => passwordManagerEnabled.value = value,
+            ),
+            if (passwordManagerEnabled.value)
+              ListTile(
+                leading: const Icon(Icons.lock),
+                title: const Text('Manage Passwords'),
+                subtitle: const Text('View and delete saved passwords'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PasswordVaultScreen(),
+                    ),
+                  );
+                },
+              ),
             DropdownButton<AppThemeMode>(
               value: selectedTheme.value,
               onChanged: (AppThemeMode? value) {
@@ -296,6 +327,8 @@ class SettingsDialog extends HookWidget {
             await prefs.setBool(privateBrowsingKey, privateBrowsing.value);
             await prefs.setBool(adBlockingKey, adBlocking.value);
             await prefs.setBool(strictModeKey, strictMode.value);
+            await prefs.setBool(
+                passwordManagerEnabledKey, passwordManagerEnabled.value);
             await prefs.setString(themeModeKey, selectedTheme.value.name);
 
             onSettingsChanged?.call();
@@ -322,6 +355,12 @@ class GoBackIntent extends Intent {}
 
 class GoForwardIntent extends Intent {}
 
+class NewTabIntent extends Intent {}
+
+class CloseTabIntent extends Intent {}
+
+class NewWindowIntent extends Intent {}
+
 class TabData {
   String currentUrl;
   final TextEditingController urlController;
@@ -336,6 +375,7 @@ class TabData {
   DateTime? lastErrorAt;
   Brightness? detectedBrightness;
   Color? detectedSeedColor;
+  SavePasswordPromptData? pendingPasswordPrompt;
 
   TabData(this.currentUrl, {String? displayUrl})
       : urlController = TextEditingController(text: displayUrl ?? currentUrl),
@@ -667,6 +707,7 @@ class _BrowserPageState extends State<BrowserPage>
   final Set<String> _pendingHeaderChecks = {};
   double _titleBarHeight = 0;
   bool _dragging = false;
+  final FocusNode _keyboardFocusNode = FocusNode();
 
   static const String _themeProbeScript = '''
 (() => {
@@ -994,6 +1035,68 @@ class _BrowserPageState extends State<BrowserPage>
 
   TabData get activeTab => tabs[tabController.index];
 
+  Future<void> _handlePasswordPromptAction(SavePasswordAction action) async {
+    final promptData = activeTab.pendingPasswordPrompt;
+    if (promptData == null) return;
+
+    setState(() {
+      activeTab.pendingPasswordPrompt = null;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final policy = SitePasswordPolicy(prefs: prefs);
+
+    switch (action) {
+      case SavePasswordAction.save:
+        final repository = PasswordStorageRepository();
+        final credential = PasswordCredential.create(
+          origin: promptData.origin,
+          username: promptData.username,
+          password: promptData.password,
+        );
+        await repository.saveCredential(credential);
+        break;
+      case SavePasswordAction.neverForSite:
+        await policy.setNeverSave(promptData.origin);
+        break;
+      case SavePasswordAction.notNow:
+        // Do nothing, just dismiss
+        break;
+    }
+  }
+
+  Future<void> _attemptAutofill(TabData tab) async {
+    if (widget.privateBrowsing) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final passwordManagerEnabled =
+        prefs.getBool(passwordManagerEnabledKey) ?? false;
+    if (!passwordManagerEnabled) return;
+
+    try {
+      // Get actual URL from WebView controller, not tab.currentUrl (can be spoofed)
+      if (tab.webViewController == null || tab.isClosed) return;
+      final actualUrl = await tab.webViewController!.currentUrl();
+      if (actualUrl == null) return;
+
+      final autofillService = PasswordAutofillService();
+      final matches = await autofillService.getMatchingCredentials(actualUrl);
+
+      if (matches.isEmpty) return;
+
+      // Use the most recently updated credential
+      final credential = matches.first;
+      final script = autofillService.generateAutofillScript(
+        credential.username,
+        credential.password,
+      );
+
+      await tab.webViewController!.runJavaScript(script);
+    } catch (e, s) {
+      logger.w('Failed to autofill credentials', error: e, stackTrace: s);
+    }
+  }
+
   bool _isAllowedNavigationUrl(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return false;
@@ -1272,6 +1375,7 @@ class _BrowserPageState extends State<BrowserPage>
 
   @override
   void dispose() {
+    _keyboardFocusNode.dispose();
     for (final tab in tabs) {
       tab.urlController.dispose();
       tab.urlFocusNode.dispose();
@@ -2030,6 +2134,39 @@ class _BrowserPageState extends State<BrowserPage>
         }
         _updateThemeFromTab(tab);
       });
+      tab.webViewController!.addJavaScriptChannel('LoginDetector',
+          onMessageReceived: (JavaScriptMessage message) async {
+        final prefs = await SharedPreferences.getInstance();
+        final passwordManagerEnabled =
+            prefs.getBool(passwordManagerEnabledKey) ?? false;
+        if (!passwordManagerEnabled) return;
+
+        try {
+          final data = jsonDecode(message.message) as Map<String, dynamic>;
+          final credentials = LoginCredentials.fromJson(data);
+
+          // Verify origin matches current tab URL to prevent spoofing
+          final tabUri = Uri.parse(tab.currentUrl);
+          final credentialUri = Uri.parse(credentials.origin);
+          if (tabUri.origin != credentialUri.origin) return;
+
+          final policy = SitePasswordPolicy(prefs: prefs);
+          if (await policy.isNeverSave(credentials.origin)) return;
+
+          if (mounted && !tab.isClosed) {
+            setState(() {
+              tab.pendingPasswordPrompt = SavePasswordPromptData(
+                origin: credentials.origin,
+                username: credentials.username,
+                password: credentials.password,
+              );
+            });
+          }
+        } catch (e, s) {
+          logger.w('Failed to parse login credentials from JS',
+              error: e, stackTrace: s);
+        }
+      });
       tab.webViewController!.setNavigationDelegate(NavigationDelegate(
         onPageStarted: (url) {
           if (!tab.isClosed) {
@@ -2081,6 +2218,10 @@ class _BrowserPageState extends State<BrowserPage>
               window.historyListenerAdded = true;
             }
           ''');
+            // Inject login detection script
+            tab.webViewController!.runJavaScript(loginDetectionScript);
+            // Attempt autofill if credentials available
+            _attemptAutofill(tab);
           }
           _updateThemeFromTab(tab);
           Future.delayed(const Duration(milliseconds: 400), () {
@@ -2163,6 +2304,18 @@ class _BrowserPageState extends State<BrowserPage>
                       ),
                     ],
                   ),
+                ),
+              ),
+            if (tab.pendingPasswordPrompt != null &&
+                activeTab == tab)
+              Positioned(
+                top: 16,
+                left: 16,
+                right: 16,
+                child: SavePasswordPrompt(
+                  origin: tab.pendingPasswordPrompt!.origin,
+                  username: tab.pendingPasswordPrompt!.username,
+                  onAction: (action) => _handlePasswordPromptAction(action),
                 ),
               ),
           ],
@@ -2279,28 +2432,88 @@ class _BrowserPageState extends State<BrowserPage>
             ),
           );
 
-    return Shortcuts(
+    return KeyboardListener(
+      focusNode: _keyboardFocusNode,
+      autofocus: true,
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent) {
+          final isCommandOrControl = (isCommandKey && HardwareKeyboard.instance.isMetaPressed) ||
+              (isControlKey && HardwareKeyboard.instance.isControlPressed);
+
+          if (isCommandOrControl) {
+            if (event.logicalKey == LogicalKeyboardKey.keyT) {
+              _addNewTab();
+            } else if (event.logicalKey == LogicalKeyboardKey.keyW) {
+              _closeTab(tabController.index);
+            } else if (event.logicalKey == LogicalKeyboardKey.keyL) {
+              activeTab.urlFocusNode.requestFocus();
+            } else if (event.logicalKey == LogicalKeyboardKey.keyR) {
+              _refresh();
+            }
+          } else if (HardwareKeyboard.instance.isAltPressed) {
+            if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+              _goBack();
+            } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+              _goForward();
+            }
+          }
+        }
+      },
+      child: Shortcuts(
       shortcuts: {
         SingleActivator(LogicalKeyboardKey.keyL,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             FocusUrlIntent(),
         SingleActivator(LogicalKeyboardKey.keyR,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             RefreshIntent(),
+        SingleActivator(LogicalKeyboardKey.keyT,
+                control: isControlKey,
+                meta: isCommandKey):
+            NewTabIntent(),
+        SingleActivator(LogicalKeyboardKey.keyW,
+                control: isControlKey,
+                meta: isCommandKey):
+            CloseTabIntent(),
+        SingleActivator(LogicalKeyboardKey.keyN,
+                control: isControlKey,
+                meta: isCommandKey):
+            NewWindowIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
             GoBackIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true):
             GoForwardIntent(),
       },
-      child: Actions(
+      child: FocusableActionDetector(
+        autofocus: true,
+        shortcuts: const {},
+        actions: const {},
+        child: Actions(
         actions: {
           FocusUrlIntent: CallbackAction<FocusUrlIntent>(
             onInvoke: (intent) => activeTab.urlFocusNode.requestFocus(),
           ),
           RefreshIntent: CallbackAction<RefreshIntent>(
             onInvoke: (intent) => _refresh(),
+          ),
+          NewTabIntent: CallbackAction<NewTabIntent>(
+            onInvoke: (intent) => _addNewTab(),
+          ),
+          CloseTabIntent: CallbackAction<CloseTabIntent>(
+            onInvoke: (intent) => _closeTab(tabController.index),
+          ),
+          NewWindowIntent: CallbackAction<NewWindowIntent>(
+            onInvoke: (intent) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('New window not supported in desktop app'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+              return null;
+            },
           ),
           GoBackIntent: CallbackAction<GoBackIntent>(
             onInvoke: (intent) => _goBack(),
@@ -2506,6 +2719,8 @@ class _BrowserPageState extends State<BrowserPage>
           ),
         ),
       ),
+    ),
+    ),
     );
   }
 }

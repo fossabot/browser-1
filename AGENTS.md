@@ -23,9 +23,16 @@ Use the format:
 - Bullet point descriptions of changes
 
 ## Impact
-- [x] Build / CI
-- [x] Refactor / cleanup
-- [x] Documentation
+Select applicable categories (use `[x]` for checked, `[ ]` for unchecked):
+- [ ] New feature
+- [ ] Bug fix
+- [ ] Breaking change
+- [ ] Build / CI
+- [ ] Refactor / cleanup
+- [ ] Documentation
+- [ ] Tests
+- [ ] Performance
+- [ ] Security
 
 ## Related Items
 - Resolves issues: #[issue-number]
@@ -99,7 +106,7 @@ When creating version bump PRs (e.g., `version-bump-X.Y.Z` branch):
    gh pr list --head <branch-name> --json number,title
    ```
 
-2. Find all PRs merged since the last version by checking `git log --oneline main` to identify PRs merged after the previous version tag.
+2. Find all PRs merged since the last version bump PR by checking `git log --oneline main` to identify PRs merged after the previous version bump PR (e.g., #240 for version-bump-1.2.4 -> #261).
 
 3. Categorize changes using the release template format:
    - **What's New**: New features (feat PRs)
@@ -126,9 +133,15 @@ When creating version bump PRs (e.g., `version-bump-X.Y.Z` branch):
    - #<pr-number> - <type>[<scope>]: <description>
 
    ## Impact
+   - [ ] New feature
+   - [ ] Bug fix
+   - [ ] Breaking change
    - [x] Build / CI
    - [x] Refactor / cleanup
    - [x] Documentation
+   - [ ] Tests
+   - [ ] Performance
+   - [ ] Security
 
    ## Related Items
    - Resolves issues: #<pr-number>
@@ -191,9 +204,15 @@ gh pr create \
 - Bullet point descriptions of changes
 
 ## Impact
-- [x] Build / CI
-- [x] Refactor / cleanup
-- [x] Documentation
+- [ ] New feature
+- [ ] Bug fix
+- [ ] Breaking change
+- [ ] Build / CI
+- [ ] Refactor / cleanup
+- [ ] Documentation
+- [ ] Tests
+- [ ] Performance
+- [ ] Security
 
 ## Related Items
 - Resolves issues: #[issue-number]
