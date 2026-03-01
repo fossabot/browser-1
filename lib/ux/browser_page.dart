@@ -351,6 +351,7 @@ class TabData {
   DateTime? lastErrorAt;
   Brightness? detectedBrightness;
   Color? detectedSeedColor;
+  SavePasswordPromptData? pendingPasswordPrompt;
 
   TabData(this.currentUrl, {String? displayUrl})
       : urlController = TextEditingController(text: displayUrl ?? currentUrl),
@@ -682,7 +683,6 @@ class _BrowserPageState extends State<BrowserPage>
   final Set<String> _pendingHeaderChecks = {};
   double _titleBarHeight = 0;
   bool _dragging = false;
-  SavePasswordPromptData? _pendingPasswordPrompt;
 
   static const String _themeProbeScript = '''
 (() => {
@@ -1010,12 +1010,12 @@ class _BrowserPageState extends State<BrowserPage>
 
   TabData get activeTab => tabs[tabController.index];
 
-  Future<void> _handlePasswordPromptAction(
-    SavePasswordAction action,
-    SavePasswordPromptData promptData,
-  ) async {
+  Future<void> _handlePasswordPromptAction(SavePasswordAction action) async {
+    final promptData = activeTab.pendingPasswordPrompt;
+    if (promptData == null) return;
+
     setState(() {
-      _pendingPasswordPrompt = null;
+      activeTab.pendingPasswordPrompt = null;
     });
 
     final prefs = await SharedPreferences.getInstance();
@@ -2090,9 +2090,9 @@ class _BrowserPageState extends State<BrowserPage>
           final policy = SitePasswordPolicy(prefs: prefs);
           if (await policy.isNeverSave(credentials.origin)) return;
 
-          if (mounted) {
+          if (mounted && !tab.isClosed) {
             setState(() {
-              _pendingPasswordPrompt = SavePasswordPromptData(
+              tab.pendingPasswordPrompt = SavePasswordPromptData(
                 origin: credentials.origin,
                 username: credentials.username,
                 password: credentials.password,
@@ -2240,18 +2240,16 @@ class _BrowserPageState extends State<BrowserPage>
                   ),
                 ),
               ),
-            if (_pendingPasswordPrompt != null)
+            if (tab.pendingPasswordPrompt != null &&
+                activeTab == tab)
               Positioned(
                 top: 16,
                 left: 16,
                 right: 16,
                 child: SavePasswordPrompt(
-                  origin: _pendingPasswordPrompt!.origin,
-                  username: _pendingPasswordPrompt!.username,
-                  onAction: (action) => _handlePasswordPromptAction(
-                    action,
-                    _pendingPasswordPrompt!,
-                  ),
+                  origin: tab.pendingPasswordPrompt!.origin,
+                  username: tab.pendingPasswordPrompt!.username,
+                  onAction: (action) => _handlePasswordPromptAction(action),
                 ),
               ),
           ],
