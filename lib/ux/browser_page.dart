@@ -34,6 +34,7 @@ import '../features/video_manager.dart';
 import '../logging/logger.dart';
 import '../logging/network_monitor.dart';
 import '../utils/string_utils.dart';
+import '../utils/platform_utils.dart';
 import 'package:pkg/ai_chat_widget.dart';
 import 'network_debug_dialog.dart';
 import 'save_password_prompt.dart';
@@ -2436,8 +2437,8 @@ class _BrowserPageState extends State<BrowserPage>
       autofocus: true,
       onKeyEvent: (event) {
         if (event is KeyDownEvent) {
-          final isCommandOrControl = (defaultTargetPlatform == TargetPlatform.macOS && HardwareKeyboard.instance.isMetaPressed) ||
-              (defaultTargetPlatform != TargetPlatform.macOS && HardwareKeyboard.instance.isControlPressed);
+          final isCommandOrControl = (isCommandKey && HardwareKeyboard.instance.isMetaPressed) ||
+              (isControlKey && HardwareKeyboard.instance.isControlPressed);
 
           if (isCommandOrControl) {
             if (event.logicalKey == LogicalKeyboardKey.keyT) {
@@ -2461,24 +2462,24 @@ class _BrowserPageState extends State<BrowserPage>
       child: Shortcuts(
       shortcuts: {
         SingleActivator(LogicalKeyboardKey.keyL,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             FocusUrlIntent(),
         SingleActivator(LogicalKeyboardKey.keyR,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             RefreshIntent(),
         SingleActivator(LogicalKeyboardKey.keyT,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             NewTabIntent(),
         SingleActivator(LogicalKeyboardKey.keyW,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             CloseTabIntent(),
         SingleActivator(LogicalKeyboardKey.keyN,
-                control: defaultTargetPlatform != TargetPlatform.macOS,
-                meta: defaultTargetPlatform == TargetPlatform.macOS):
+                control: isControlKey,
+                meta: isCommandKey):
             NewWindowIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
             GoBackIntent(),
