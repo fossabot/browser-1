@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>browser</title>
+  <title>Browser AI - browser</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="sidebar-hidden">
+<body>
   <button class="sidebar-toggle" onclick="toggleSidebar()">≡</button>
 
   <aside class="sidebar">
@@ -32,15 +32,30 @@
   </aside>
 
   <main class="main centered">
-    <div class="loader"></div>
-    <img src="image.png" width="400" onload="setTimeout(() => document.body.classList.add('loaded'), 500)">
-    <h1>browser</h1>
-    <div class="home-links">
-      <a href="https://github.com/bniladridas/browser/releases/latest/download/browser.dmg">download</a>
-      <span>·</span>
-      <a href="blog-get-started.html">get started</a>
-      <span>·</span>
-      <a href="https://browserflutter.medium.com/notes-520da32fc748">notes</a>
+    <div class="content">
+      <div class="section">
+        <h3>Summaries</h3>
+        <p>One-click page overview.</p>
+      </div>
+      
+      <div class="section">
+        <h3>Context</h3>
+        <p>Highlight text for explanations.</p>
+      </div>
+      
+      <div class="section">
+        <h3>Quick Questions</h3>
+        <p>Type <code>?</code> in chat bar.</p>
+        <ul>
+          <li><code>? what is this</code></li>
+          <li><code>? summarize</code></li>
+        </ul>
+      </div>
+      
+      <div class="section">
+        <h3>Privacy</h3>
+        <p>All processing local. Nothing leaves your Mac.</p>
+      </div>
     </div>
   </main>
 
