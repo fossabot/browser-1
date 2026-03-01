@@ -51,7 +51,7 @@ void main() {
       expect(credential.origin, 'https://accounts.example.com');
       expect(credential.username, 'alice');
       expect(credential.password, 'secret');
-      expect(credential.updatedAt.isAfter(credential.createdAt), false);
+      expect(credential.updatedAt.isBefore(credential.createdAt), false);
     });
 
     test('should serialize and deserialize', () {

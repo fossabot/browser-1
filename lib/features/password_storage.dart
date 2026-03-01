@@ -148,9 +148,12 @@ class PasswordStorageRepository {
   String _storageKey(String id) => '$_credentialPrefix$id';
 
   Future<void> saveCredential(PasswordCredential credential) async {
-    final payload = jsonEncode(credential.toJson());
+    final normalizedCredential = credential.copyWith(
+      updatedAt: DateTime.now().toUtc(),
+    );
+    final payload = jsonEncode(normalizedCredential.toJson());
     await _store.write(
-      key: _storageKey(credential.id),
+      key: _storageKey(normalizedCredential.id),
       value: payload,
     );
   }
@@ -163,16 +166,11 @@ class PasswordStorageRepository {
 
   Future<List<PasswordCredential>> listCredentials() async {
     final allValues = await _store.readAll();
-    final credentials = <PasswordCredential>[];
-    for (final entry in allValues.entries) {
-      if (!entry.key.startsWith(_credentialPrefix)) {
-        continue;
-      }
-      final credential = _decodeCredential(entry.value);
-      if (credential != null) {
-        credentials.add(credential);
-      }
-    }
+    final credentials = allValues.entries
+        .where((entry) => entry.key.startsWith(_credentialPrefix))
+        .map((entry) => _decodeCredential(entry.value))
+        .whereType<PasswordCredential>()
+        .toList();
     credentials.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return credentials;
   }
@@ -189,11 +187,9 @@ class PasswordStorageRepository {
 
   Future<void> clearAllCredentials() async {
     final allValues = await _store.readAll();
-    for (final key in allValues.keys) {
-      if (key.startsWith(_credentialPrefix)) {
-        await _store.delete(key: key);
-      }
-    }
+    final credentialKeys =
+        allValues.keys.where((key) => key.startsWith(_credentialPrefix));
+    await Future.wait(credentialKeys.map((key) => _store.delete(key: key)));
   }
 
   PasswordCredential? _decodeCredential(String rawValue) {
