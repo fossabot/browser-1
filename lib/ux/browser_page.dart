@@ -24,6 +24,9 @@ import 'package:desktop_drop/desktop_drop.dart';
 import '../constants.dart';
 import '../features/theme_utils.dart';
 import '../features/bookmark_manager.dart';
+import '../features/password_prompt.dart';
+import '../features/password_storage.dart';
+import '../features/login_detection.dart';
 import '../browser_state.dart';
 
 import '../features/video_manager.dart';
@@ -32,6 +35,7 @@ import '../logging/network_monitor.dart';
 import '../utils/string_utils.dart';
 import 'package:pkg/ai_chat_widget.dart';
 import 'network_debug_dialog.dart';
+import 'save_password_prompt.dart';
 
 const _userAgents = {
   TargetPlatform.macOS: {
@@ -678,6 +682,7 @@ class _BrowserPageState extends State<BrowserPage>
   final Set<String> _pendingHeaderChecks = {};
   double _titleBarHeight = 0;
   bool _dragging = false;
+  SavePasswordPromptData? _pendingPasswordPrompt;
 
   static const String _themeProbeScript = '''
 (() => {
@@ -1004,6 +1009,36 @@ class _BrowserPageState extends State<BrowserPage>
   }
 
   TabData get activeTab => tabs[tabController.index];
+
+  Future<void> _handlePasswordPromptAction(
+    SavePasswordAction action,
+    SavePasswordPromptData promptData,
+  ) async {
+    setState(() {
+      _pendingPasswordPrompt = null;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final policy = SitePasswordPolicy(prefs: prefs);
+
+    switch (action) {
+      case SavePasswordAction.save:
+        final repository = PasswordStorageRepository();
+        final credential = PasswordCredential.create(
+          origin: promptData.origin,
+          username: promptData.username,
+          password: promptData.password,
+        );
+        await repository.saveCredential(credential);
+        break;
+      case SavePasswordAction.neverForSite:
+        await policy.setNeverSave(promptData.origin);
+        break;
+      case SavePasswordAction.notNow:
+        // Do nothing, just dismiss
+        break;
+    }
+  }
 
   bool _isAllowedNavigationUrl(String url) {
     final uri = Uri.tryParse(url);
@@ -2041,6 +2076,33 @@ class _BrowserPageState extends State<BrowserPage>
         }
         _updateThemeFromTab(tab);
       });
+      tab.webViewController!.addJavaScriptChannel('LoginDetector',
+          onMessageReceived: (JavaScriptMessage message) async {
+        final prefs = await SharedPreferences.getInstance();
+        final passwordManagerEnabled =
+            prefs.getBool(passwordManagerEnabledKey) ?? false;
+        if (!passwordManagerEnabled) return;
+
+        try {
+          final data = jsonDecode(message.message) as Map<String, dynamic>;
+          final credentials = LoginCredentials.fromJson(data);
+
+          final policy = SitePasswordPolicy(prefs: prefs);
+          if (await policy.isNeverSave(credentials.origin)) return;
+
+          if (mounted) {
+            setState(() {
+              _pendingPasswordPrompt = SavePasswordPromptData(
+                origin: credentials.origin,
+                username: credentials.username,
+                password: credentials.password,
+              );
+            });
+          }
+        } catch (e) {
+          // Ignore malformed messages
+        }
+      });
       tab.webViewController!.setNavigationDelegate(NavigationDelegate(
         onPageStarted: (url) {
           if (!tab.isClosed) {
@@ -2092,6 +2154,8 @@ class _BrowserPageState extends State<BrowserPage>
               window.historyListenerAdded = true;
             }
           ''');
+            // Inject login detection script
+            tab.webViewController!.runJavaScript(loginDetectionScript);
           }
           _updateThemeFromTab(tab);
           Future.delayed(const Duration(milliseconds: 400), () {
@@ -2173,6 +2237,20 @@ class _BrowserPageState extends State<BrowserPage>
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            if (_pendingPasswordPrompt != null)
+              Positioned(
+                top: 16,
+                left: 16,
+                right: 16,
+                child: SavePasswordPrompt(
+                  origin: _pendingPasswordPrompt!.origin,
+                  username: _pendingPasswordPrompt!.username,
+                  onAction: (action) => _handlePasswordPromptAction(
+                    action,
+                    _pendingPasswordPrompt!,
                   ),
                 ),
               ),
