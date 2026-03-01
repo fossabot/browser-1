@@ -706,6 +706,7 @@ class _BrowserPageState extends State<BrowserPage>
   final Set<String> _pendingHeaderChecks = {};
   double _titleBarHeight = 0;
   bool _dragging = false;
+  final FocusNode _keyboardFocusNode = FocusNode();
 
   static const String _themeProbeScript = '''
 (() => {
@@ -1373,6 +1374,7 @@ class _BrowserPageState extends State<BrowserPage>
 
   @override
   void dispose() {
+    _keyboardFocusNode.dispose();
     for (final tab in tabs) {
       tab.urlController.dispose();
       tab.urlFocusNode.dispose();
@@ -2430,7 +2432,7 @@ class _BrowserPageState extends State<BrowserPage>
           );
 
     return KeyboardListener(
-      focusNode: FocusNode(),
+      focusNode: _keyboardFocusNode,
       autofocus: true,
       onKeyEvent: (event) {
         if (event is KeyDownEvent) {
