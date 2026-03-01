@@ -2506,7 +2506,12 @@ class _BrowserPageState extends State<BrowserPage>
           ),
           NewWindowIntent: CallbackAction<NewWindowIntent>(
             onInvoke: (intent) {
-              // New window not supported in desktop app
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('New window not supported in desktop app'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
               return null;
             },
           ),
