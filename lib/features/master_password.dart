@@ -6,19 +6,15 @@
 
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
 import '../constants.dart';
 
 class MasterPasswordService {
-  final FlutterSecureStorage _storage;
   final LocalAuthentication _localAuth;
 
-  MasterPasswordService({FlutterSecureStorage? storage, LocalAuthentication? localAuth})
-      : _storage = storage ?? const FlutterSecureStorage(
-              iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-            ),
-        _localAuth = localAuth ?? LocalAuthentication();
+  MasterPasswordService({LocalAuthentication? localAuth})
+      : _localAuth = localAuth ?? LocalAuthentication();
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -53,23 +49,27 @@ class MasterPasswordService {
   }
 
   Future<bool> hasMasterPassword() async {
-    final hash = await _storage.read(key: masterPasswordHashKey);
+    final prefs = await SharedPreferences.getInstance();
+    final hash = prefs.getString(masterPasswordHashKey);
     return hash != null;
   }
 
   Future<void> setMasterPassword(String password) async {
     final hash = _hashPassword(password);
-    await _storage.write(key: masterPasswordHashKey, value: hash);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(masterPasswordHashKey, hash);
   }
 
   Future<bool> verifyMasterPassword(String password) async {
-    final storedHash = await _storage.read(key: masterPasswordHashKey);
+    final prefs = await SharedPreferences.getInstance();
+    final storedHash = prefs.getString(masterPasswordHashKey);
     if (storedHash == null) return false;
     final inputHash = _hashPassword(password);
     return storedHash == inputHash;
   }
 
   Future<void> removeMasterPassword() async {
-    await _storage.delete(key: masterPasswordHashKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(masterPasswordHashKey);
   }
 }
