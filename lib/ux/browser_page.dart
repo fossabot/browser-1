@@ -2623,7 +2623,7 @@ class _BrowserPageState extends State<BrowserPage>
                                 final tab = tabs[index];
                                 final isSelected = tabController.index == index;
                                 return ReorderableDragStartListener(
-                                  key: ValueKey('tab_$index'),
+                                  key: ObjectKey(tab),
                                   index: index,
                                   child: InkWell(
                                     onTap: () => setState(() => tabController.index = index),
