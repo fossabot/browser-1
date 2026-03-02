@@ -1404,6 +1404,7 @@ class _BrowserPageState extends State<BrowserPage>
 
   Future<void> _loadReorderableTabs() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _reorderableTabs = prefs.getBool(reorderableTabsKey) ?? true;
     });
