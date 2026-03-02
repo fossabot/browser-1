@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../features/password_storage.dart';
+import '../features/master_password.dart';
 import '../logging/logger.dart';
+import 'master_password_dialog.dart';
 
 class PasswordVaultScreen extends StatefulWidget {
   const PasswordVaultScreen({
@@ -26,6 +28,7 @@ class _PasswordVaultScreenState extends State<PasswordVaultScreen> {
   late final PasswordStorageRepository _repository;
   List<PasswordCredential> _credentials = [];
   bool _loading = true;
+  bool _authenticated = false;
   String _searchQuery = '';
   Timer? _debounce;
 
@@ -33,6 +36,40 @@ class _PasswordVaultScreenState extends State<PasswordVaultScreen> {
   void initState() {
     super.initState();
     _repository = widget._repository ?? PasswordStorageRepository();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final service = MasterPasswordService();
+    final hasMasterPassword = await service.hasMasterPassword();
+
+    if (!hasMasterPassword) {
+      if (!mounted) return;
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const MasterPasswordDialog(isSetup: true),
+      );
+      if (result != true) {
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        return;
+      }
+    } else {
+      if (!mounted) return;
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const MasterPasswordDialog(),
+      );
+      if (result != true) {
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        return;
+      }
+    }
+
+    setState(() => _authenticated = true);
     _loadCredentials();
   }
 
@@ -142,6 +179,12 @@ class _PasswordVaultScreenState extends State<PasswordVaultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_authenticated) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Password Vault'),

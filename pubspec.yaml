@@ -61,6 +61,7 @@ dependencies:
 
   pkg:
     path: ./pkg
+  crypto: ^3.0.7
 
 
 dev_dependencies:
